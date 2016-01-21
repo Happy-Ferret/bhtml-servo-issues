@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+
+<meta charset="utf8">
+
+<script>
+
+  const SOURCES = [
+    {repo: 'servo/servo',      label: 'A-browserhtml/P1'},
+    {repo: 'servo/servo',      label: 'A-browserhtml/P2'},
+    {repo: 'servo/servo',      label: 'A-browserhtml/P3'},
+    {repo: 'glennw/webrender', label: 'A-browserhtml/P1'},
+    {repo: 'glennw/webrender', label: 'A-browserhtml/P2'},
+    {repo: 'glennw/webrender', label: 'A-browserhtml/P3'},
+  ];
+
+  const box = (repo, label, count, content) => `
+    <div class="box">
+    <h1><a href="http://github.com/${repo}">${repo}</a>: <a href="http://github.com/${repo}/issues?q=is:open+label:${label}">${label}</a> #${count}</h1>
+      <div class="content">
+        ${content}
+      </div>
+    </div>`;
+
+  const issue = (issue, repo) => `
+    <div class="issue-title">
+
+        <a href="${issue.html_url}" class="issue-title-link">
+          ${issue.title}
+        </a>
+
+        <span class="labels">
+          ${issue.labels.map(l => `<a href="http://github.com/${repo}/issues?q=is:open+label:${l.name}" class="label" style="background-color: #${l.color}; color: #332900;">${l.name}</a>`).join("")}
+        </span>
+          
+    </div>`
+
+  function fetchIssuesFor(repo, label) {
+    return new Promise((success, failure) => {
+      var url = `https://api.github.com/repos/${repo}/issues?labels=${label}`;
+      fetch(url).then(response => {
+        response.json().then(issues => success({repo:repo,label:label,issues:issues}), failure);
+      }, failure).catch(failure);
+    });
+  }
+
+  function fetchAll() {
+    document.body.className = 'loading';
+    document.querySelector('p.loading').textContent = `Loading Github issues (#${SOURCES.length})…`;
+    Promise.all(SOURCES.map(source => fetchIssuesFor(source.repo, source.label))).then(allResponses => {
+      document.body.className = 'success';
+      allResponses.sort((a, b) => a.repo > b.repo ? -1 : a.repo < b.repo ? 1 : a.label > b.label ? 1 : -1);
+      var html = allResponses.map(r => box(r.repo, r.label, r.issues.length, r.issues.map(i => issue(i,r.repo)).join(""))).join("");
+      document.querySelector("main").innerHTML = html;
+    }, error => {
+      document.body.className = 'error';
+      document.querySelector('.error').textContent = error;
+    })
+  }
+
+</script>
+
+<body onload="fetchAll()">
+  <h1>Browser.html + Servo issues</h1>
+  <button class="fetchbutton" onclick='fetchAll()'>reload Github issues</button>
+  <p class="loading"></p>
+  <p class="error"></p>
+  <main></main>
+</body>
+
+
+
+<style>
+  button.fetchbutton, p.loading, p.error, main {
+    display: none;
+  }
+
+  body.loading p.loading,
+  body.success button.fetchbutton,
+  body.success main,
+  body.error   button.fetchbutton,
+  body.error   p.error {
+    display: block;
+  }
+
+  .error {
+    color: #F00;
+  }
+
+  html {
+    font: 13px / 1.4 Helvetica, arial, nimbussansl, liberationsans, freesans, clean, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
+  }
+
+  body {
+    margin: 20px 40px;
+  }
+
+  .box {
+    margin: 40px 0;
+  }
+
+  .box > h1 {
+    font-size: 18px;
+    border: 1px solid #eee;
+    margin: 0;
+    line-height: 40px;
+    padding: 0 8px;
+    background-color: #F8F8F8;
+    border-radius: 3px 3px 0 0;
+  }
+
+  .box > h1 > a {
+    color: #4078c0;
+  }
+
+  a {
+    color: black;
+    text-decoration: none;
+  }
+
+  a:hover {
+    text-decoration: underline;
+  }
+
+  .label {
+    padding: 3px 4px;
+    margin: 0 3px;
+    font-weight: bold;
+    border-radius: 2px;
+    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
+  }
+
+  .issue-title {
+    padding: 0 10px;
+    font-size: 12px;
+    font-weight: bold;
+    border-color: #eee;
+    border-style: solid;
+    border-width: 0 1px 1px 1px;
+    line-height: 40px;
+  }
+
+  .issue-title:nth-child(even) {
+    background: #F8F8F8;
+  }
+
+  @media (max-width: 800px) {
+    body {
+      margin: 0;
+    }
+  }
+</style>
