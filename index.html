@@ -2,6 +2,8 @@
 
 <meta charset="utf8">
 
+<script src="fetch.js"></script>
+
 <script>
 
   const SOURCES = [
@@ -13,32 +15,33 @@
     {repo: 'glennw/webrender', label: 'A-browserhtml/P3'},
   ];
 
-  const box = (repo, label, count, content) => `
+  function box(repo, label, count, content) {
+   return `
     <div class="box">
     <h1><a href="http://github.com/${repo}">${repo}</a>: <a href="http://github.com/${repo}/issues?q=is:open+label:${label}">${label}</a> #${count}</h1>
       <div class="content">
         ${content}
       </div>
-    </div>`;
+      </div>`;
+  }
 
-  const issue = (issue, repo) => `
-    <div class="issue-title">
-
+  function issue(issue, repo) {
+    return `
+     <div class="issue-title">
         <a href="${issue.html_url}" class="issue-title-link">
           ${issue.title}
         </a>
-
         <span class="labels">
-          ${issue.labels.map(l => `<a href="http://github.com/${repo}/issues?q=is:open+label:${l.name}" class="label" style="background-color: #${l.color}; color: #332900;">${l.name}</a>`).join("")}
+          ${issue.labels.map(function(l) {return `<a href="http://github.com/${repo}/issues?q=is:open+label:${l.name}" class="label" style="background-color: #${l.color}; color: #332900;">${l.name}</a>`}).join("")}
         </span>
-          
-    </div>`
+    </div>`;
+  }
 
   function fetchIssuesFor(repo, label) {
-    return new Promise((success, failure) => {
+    return new Promise(function(success, failure) {
       var url = `https://api.github.com/repos/${repo}/issues?labels=${label}`;
-      fetch(url).then(response => {
-        response.json().then(issues => success({repo:repo,label:label,issues:issues}), failure);
+      fetch(url).then(function(response) {
+        response.json().then(function(issues) {return success({repo:repo,label:label,issues:issues})}, failure);
       }, failure).catch(failure);
     });
   }
@@ -46,12 +49,12 @@
   function fetchAll() {
     document.body.className = 'loading';
     document.querySelector('p.loading').textContent = `Loading Github issues (#${SOURCES.length})…`;
-    Promise.all(SOURCES.map(source => fetchIssuesFor(source.repo, source.label))).then(allResponses => {
+    Promise.all(SOURCES.map(function(source) {return fetchIssuesFor(source.repo, source.label)})).then(function(allResponses) {
       document.body.className = 'success';
-      allResponses.sort((a, b) => a.repo > b.repo ? -1 : a.repo < b.repo ? 1 : a.label > b.label ? 1 : -1);
-      var html = allResponses.map(r => box(r.repo, r.label, r.issues.length, r.issues.map(i => issue(i,r.repo)).join(""))).join("");
+      allResponses.sort(function(a, b) {return a.repo > b.repo ? -1 : a.repo < b.repo ? 1 : a.label > b.label ? 1 : -1});
+      var html = allResponses.map(function(r) {return box(r.repo, r.label, r.issues.length, r.issues.map(function(i) {return issue(i,r.repo)}).join(""))}).join("");
       document.querySelector("main").innerHTML = html;
-    }, error => {
+    }, function(error) {
       document.body.className = 'error';
       document.querySelector('.error').textContent = error;
     })
