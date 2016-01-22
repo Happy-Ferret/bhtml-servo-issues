@@ -37,7 +37,7 @@
     return `
      <div class="issue-title">
         <a href="${issue.html_url}" class="issue-title-link">
-          ${issue.title}
+          <span class="issue-number">${issue.number}</span> ${issue.title}
         </a>
         <span class="labels">
           ${issue.labels.map(function(l) {return `<a href="http://github.com/${repo}/issues?q=is:open+label:${l.name}" class="label" style="background-color: #${l.color}; color: #332900;">${l.name}</a>`}).join("")}
@@ -190,6 +190,14 @@
 
   .issue-title:nth-child(even) {
     background: #F8F8F8;
+  }
+
+  .issue-number {
+    color: #A7A7A7;
+  }
+
+  .issue-number:after {
+    content: ":";
   }
 
   @media (max-width: 800px) {
