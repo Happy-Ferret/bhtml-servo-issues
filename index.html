@@ -7,22 +7,30 @@
 <script>
 
   const SOURCES = [
-    {repo: 'servo/servo',      label: 'A-browserhtml/P1'},
-    {repo: 'servo/servo',      label: 'A-browserhtml/P2'},
-    {repo: 'servo/servo',      label: 'A-browserhtml/P3'},
-    {repo: 'glennw/webrender', label: 'A-browserhtml/P1'},
-    {repo: 'glennw/webrender', label: 'A-browserhtml/P2'},
-    {repo: 'glennw/webrender', label: 'A-browserhtml/P3'},
+    /* {repo, label, short, color, count, issues} */
+    {repo: 'servo/servo',      label: 'A-browserhtml/P1', short: 'Servo:P1', color: '#E44B23'},
+    {repo: 'servo/servo',      label: 'A-browserhtml/P2', short: 'Servo:P2', color: 'black'},
+    {repo: 'servo/servo',      label: 'A-browserhtml/P3', short: 'Servo:P3', color: 'grey'},
+    {repo: 'glennw/webrender', label: 'A-browserhtml/P1', short: 'WR:P1', color: '#E44B23'},
+    {repo: 'glennw/webrender', label: 'A-browserhtml/P2', short: 'WR:P2', color: 'black'},
+    {repo: 'glennw/webrender', label: 'A-browserhtml/P3', short: 'WR:P3', color: 'grey'},
   ];
 
-  function box(repo, label, count, content) {
+  function summary() {
+    return `<h2 class="summary">` + SOURCES.map(function(s) {
+      return `<span class="short">${s.short}:</span><span class="count" style="color:${s.color}">${s.count}</span>`
+    }).join(" ") + `</h2>`;
+  }
+
+  function box(source, content) {
+    var r = source.repo;
+    var l = source.label;
+    var c = source.count;
    return `
     <div class="box">
-    <h1><a href="http://github.com/${repo}">${repo}</a>: <a href="http://github.com/${repo}/issues?q=is:open+label:${label}">${label}</a> #${count}</h1>
-      <div class="content">
-        ${content}
-      </div>
-      </div>`;
+    <h1><a href="http://github.com/${r}">${r}</a>: <a href="http://github.com/${r}/issues?q=is:open+label:${l}">${l}</a> #${c}</h1>
+      <div class="content">${content}</div>
+    </div>`;
   }
 
   function issue(issue, repo) {
@@ -37,11 +45,15 @@
     </div>`;
   }
 
-  function fetchIssuesFor(repo, label) {
+  function fetchIssuesFor(source) {
     return new Promise(function(success, failure) {
-      var url = `https://api.github.com/repos/${repo}/issues?labels=${label}`;
+      var url = `https://api.github.com/repos/${source.repo}/issues?labels=${source.label}`;
       fetch(url).then(function(response) {
-        response.json().then(function(issues) {return success({repo:repo,label:label,issues:issues})}, failure);
+        response.json().then(function(issues) {
+          source.issues = issues;
+          source.count = issues.length;
+          success();
+        }, failure);
       }, failure).catch(failure);
     });
   }
@@ -49,10 +61,14 @@
   function fetchAll() {
     document.body.className = 'loading';
     document.querySelector('p.loading').textContent = `Loading Github issues (#${SOURCES.length})…`;
-    Promise.all(SOURCES.map(function(source) {return fetchIssuesFor(source.repo, source.label)})).then(function(allResponses) {
+    Promise.all(SOURCES.map(function(source) {return fetchIssuesFor(source)})).then(function() {
       document.body.className = 'success';
-      allResponses.sort(function(a, b) {return a.repo > b.repo ? -1 : a.repo < b.repo ? 1 : a.label > b.label ? 1 : -1});
-      var html = allResponses.map(function(r) {return box(r.repo, r.label, r.issues.length, r.issues.map(function(i) {return issue(i,r.repo)}).join(""))}).join("");
+      var html = summary();
+      html += SOURCES.map(function(s) {
+        return box(s, s.issues.map(function(i) {
+          return issue(i, s.repo)
+        }).join(""))
+      }).join("");
       document.querySelector("main").innerHTML = html;
     }, function(error) {
       document.body.className = 'error';
@@ -63,9 +79,9 @@
 </script>
 
 <body onload="fetchAll()">
-  <h1>Browser.html + Servo issues</h1>
   <button class="fetchbutton" onclick='fetchAll()'>reload Github issues</button>
   <p class="loading"></p>
+  <h1>Browser.html + Servo issues</h1>
   <p class="error"></p>
   <main></main>
 </body>
@@ -73,15 +89,14 @@
 
 
 <style>
-  button.fetchbutton, p.loading, p.error, main {
+  button.fetchbutton, p.loading, p.error {
     display: none;
   }
 
   body.loading p.loading,
+  body.error   p.error,
   body.success button.fetchbutton,
-  body.success main,
-  body.error   button.fetchbutton,
-  body.error   p.error {
+  body.error   button.fetchbutton {
     display: block;
   }
 
@@ -95,6 +110,33 @@
 
   body {
     margin: 20px 40px;
+  }
+
+  button {
+    position: relative;
+    display: inline-block;
+    padding: 6px 12px;
+    font-size: 13px;
+    font-weight: bold;
+    line-height: 20px;
+    color: #333;
+    white-space: nowrap;
+    vertical-align: middle;
+    cursor: pointer;
+    background-color: #eee;
+    background-image: -webkit-linear-gradient(#fcfcfc, #eee);
+    background-image: linear-gradient(#fcfcfc, #eee);
+    border: 1px solid #d5d5d5;
+    border-radius: 3px;
+    -webkit-user-select: none;
+    -moz-user-select: none;
+    -ms-user-select: none;
+    user-select: none;
+    -webkit-appearance: none;
+  }
+  
+  .short {
+    font-size: 12px;
   }
 
   .box {
@@ -122,6 +164,10 @@
 
   a:hover {
     text-decoration: underline;
+  }
+
+  p.loading, button.fetchbutton {
+    float: right;
   }
 
   .label {
