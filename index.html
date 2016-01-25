@@ -67,7 +67,7 @@
       html += SOURCES.map(function(s) {
         return box(s, s.issues.map(function(i) {
           return issue(i, s.repo)
-        }).join(""))
+        }).reverse().join(""))
       }).join("");
       document.querySelector("main").innerHTML = html;
     }, function(error) {
