@@ -4,6 +4,8 @@
 
 <script src="fetch.js"></script>
 
+<link rel="stylesheet" href="style.css">
+
 <script>
 
   const SOURCES = [
@@ -49,11 +51,15 @@
     return new Promise(function(success, failure) {
       var url = `https://api.github.com/repos/${source.repo}/issues?labels=${source.label}`;
       fetch(url).then(function(response) {
-        response.json().then(function(issues) {
-          source.issues = issues;
-          source.count = issues.length;
-          success();
-        }, failure);
+        if (response.status != 200) {
+          failure(`HTTP Error: ${response.statusText} (${response.status})`);
+        } else {
+          response.json().then(function(issues) {
+            source.issues = issues;
+            source.count = issues.length;
+            success();
+          }, failure);
+        }
       }, failure).catch(failure);
     });
   }
@@ -72,7 +78,7 @@
       document.querySelector("main").innerHTML = html;
     }, function(error) {
       document.body.className = 'error';
-      document.querySelector('.error').textContent = error;
+      document.querySelector('p.error').textContent = error;
     })
   }
 
@@ -86,124 +92,3 @@
   <p>See recently <a href="closed.html">closed issues</a></p>
   <main></main>
 </body>
-
-
-
-<style>
-  button.fetchbutton, p.loading, p.error {
-    display: none;
-  }
-
-  body.loading p.loading,
-  body.error   p.error,
-  body.success button.fetchbutton,
-  body.error   button.fetchbutton {
-    display: block;
-  }
-
-  .error {
-    color: #F00;
-  }
-
-  html {
-    font: 13px / 1.4 Helvetica, arial, nimbussansl, liberationsans, freesans, clean, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  }
-
-  body {
-    margin: 20px 40px;
-  }
-
-  button {
-    position: relative;
-    display: inline-block;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: bold;
-    line-height: 20px;
-    color: #333;
-    white-space: nowrap;
-    vertical-align: middle;
-    cursor: pointer;
-    background-color: #eee;
-    background-image: -webkit-linear-gradient(#fcfcfc, #eee);
-    background-image: linear-gradient(#fcfcfc, #eee);
-    border: 1px solid #d5d5d5;
-    border-radius: 3px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-appearance: none;
-  }
-  
-  .short {
-    font-size: 12px;
-  }
-
-  .box {
-    margin: 40px 0;
-  }
-
-  .box > h1 {
-    font-size: 18px;
-    border: 1px solid #eee;
-    margin: 0;
-    line-height: 40px;
-    padding: 0 8px;
-    background-color: #F8F8F8;
-    border-radius: 3px 3px 0 0;
-  }
-
-  .box > h1 > a {
-    color: #4078c0;
-  }
-
-  a {
-    color: black;
-    text-decoration: none;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
-
-  p.loading, button.fetchbutton {
-    float: right;
-  }
-
-  .label {
-    padding: 3px 4px;
-    margin: 0 3px;
-    font-weight: bold;
-    border-radius: 2px;
-    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
-  }
-
-  .issue-title {
-    padding: 0 10px;
-    font-size: 12px;
-    font-weight: bold;
-    border-color: #eee;
-    border-style: solid;
-    border-width: 0 1px 1px 1px;
-    line-height: 40px;
-  }
-
-  .issue-title:nth-child(even) {
-    background: #F8F8F8;
-  }
-
-  .issue-number {
-    color: #A7A7A7;
-  }
-
-  .issue-number:after {
-    content: ":";
-  }
-
-  @media (max-width: 800px) {
-    body {
-      margin: 0;
-    }
-  }
-</style>

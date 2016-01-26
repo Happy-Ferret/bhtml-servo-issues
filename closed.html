@@ -5,6 +5,14 @@
 <script src="fetch.js"></script>
 <script src="pretty-date.js"></script>
 
+<link rel="stylesheet" href="style.css">
+
+<style>
+  body {
+    background: #FDD;
+  }
+</style>
+
 <script>
 
   const SOURCES = [
@@ -16,10 +24,7 @@
     {repo: 'glennw/webrender', label: 'A-browserhtml/P3'},
   ];
 
-  function box(source, content) {
-    var r = source.repo;
-    var l = source.label;
-    var c = source.count;
+  function box(content) {
    return `
     <div class="box">
       <div class="content">${content}</div>
@@ -45,11 +50,15 @@
     return new Promise(function(success, failure) {
       var url = `https://api.github.com/repos/${source.repo}/issues?labels=${source.label}&state=closed`;
       fetch(url).then(function(response) {
-        response.json().then(function(issues) {
-          source.issues = issues;
-          source.count = issues.length;
-          success();
-        }, failure);
+        if (response.status != 200) {
+          failure(`HTTP Error: ${response.statusText} (${response.status})`);
+        } else {
+          response.json().then(function(issues) {
+            source.issues = issues;
+            source.count = issues.length;
+            success();
+          }, failure);
+        }
       }, failure).catch(failure);
     });
   }
@@ -67,11 +76,11 @@
         return (new Date(i1.closed_at).getTime()) < (new Date(i2.closed_at).getTime()) ? 1 : -1;
       });
 
-      var html = issues.map(issue).join("");
+      var html = box(issues.map(issue).join(""));
       document.querySelector("main").innerHTML = html;
     }, function(error) {
       document.body.className = 'error';
-      document.querySelector('.error').textContent = error;
+      document.querySelector('p.error').textContent = error;
     })
   }
 
@@ -84,136 +93,3 @@
   <p class="error"></p>
   <main></main>
 </body>
-
-
-
-<style>
-  body {
-    background: #FEE;
-  }
-
-  button.fetchbutton, p.loading, p.error {
-    display: none;
-  }
-
-  body.loading p.loading,
-  body.error   p.error,
-  body.success button.fetchbutton,
-  body.error   button.fetchbutton {
-    display: block;
-  }
-
-  .error {
-    color: #F00;
-  }
-
-  html {
-    font: 13px / 1.4 Helvetica, arial, nimbussansl, liberationsans, freesans, clean, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol";
-  }
-
-  body {
-    margin: 20px 40px;
-  }
-
-  button {
-    position: relative;
-    display: inline-block;
-    padding: 6px 12px;
-    font-size: 13px;
-    font-weight: bold;
-    line-height: 20px;
-    color: #333;
-    white-space: nowrap;
-    vertical-align: middle;
-    cursor: pointer;
-    background-color: #eee;
-    background-image: -webkit-linear-gradient(#fcfcfc, #eee);
-    background-image: linear-gradient(#fcfcfc, #eee);
-    border: 1px solid #d5d5d5;
-    border-radius: 3px;
-    -webkit-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
-    -webkit-appearance: none;
-  }
-  
-  .short {
-    font-size: 12px;
-  }
-
-  .box {
-    margin: 40px 0;
-  }
-
-  .box > h1 {
-    font-size: 18px;
-    border: 1px solid #eee;
-    margin: 0;
-    line-height: 40px;
-    padding: 0 8px;
-    background-color: #F8F8F8;
-    border-radius: 3px 3px 0 0;
-  }
-
-  .box > h1 > a {
-    color: #4078c0;
-  }
-
-  a {
-    color: black;
-    text-decoration: none;
-  }
-
-  a:hover {
-    text-decoration: underline;
-  }
-
-  p.loading, button.fetchbutton {
-    float: right;
-  }
-
-  .label {
-    padding: 3px 4px;
-    margin: 0 3px;
-    font-weight: bold;
-    border-radius: 2px;
-    box-shadow: inset 0 -1px 0 rgba(0,0,0,0.12);
-  }
-
-  .issue-title {
-    padding: 0 10px;
-    font-size: 12px;
-    font-weight: bold;
-    border-color: #eee;
-    border-style: solid;
-    border-width: 0 1px 1px 1px;
-    line-height: 40px;
-  }
-
-  .issue-title:first-of-type {
-    border-width: 1px;
-  }
-
-  .issue-title:nth-child(even) {
-    background: #F8F8F8;
-  }
-
-  .issue-title:nth-child(odd) {
-    background: #FFFFFF;
-  }
-
-  .issue-number {
-    color: #A7A7A7;
-  }
-
-  .issue-number:after {
-    content: ":";
-  }
-
-  @media (max-width: 800px) {
-    body {
-      margin: 0;
-    }
-  }
-</style>
