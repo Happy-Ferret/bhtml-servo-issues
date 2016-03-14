@@ -25,7 +25,7 @@
 
   function summary() {
     return `<ul class="summary">` + SOURCES.map(function(s) {
-      return `<li><a class="short" href="#${s.short}">${s.short}:</a><span class="count" style="color:${s.color}">${s.count}</span></li>`
+      return `<li><a class="short" href="#${s.short}">${s.short}:</a><span class="count" style="color:${s.color}"> ${s.count}</span></li>`
     }).join(" ") + `</ul>`;
   }
 
@@ -91,6 +91,5 @@
   <p class="loading"></p>
   <h1>Browser.html + Servo issues</h1>
   <p class="error"></p>
-  <p>See recently <a href="closed.html">closed issues</a></p>
   <main></main>
 </body>
