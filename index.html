@@ -25,14 +25,14 @@
 
   function summary() {
     return `<h2 class="summary">` + SOURCES.map(function(s) {
-      return `<span class="short">${s.short}:</span><span class="count" style="color:${s.color}">${s.count}</span>`
+      return `<a class="short" href="#${s.short}">${s.short}:</a><span class="count" style="color:${s.color}">${s.count}</span>`
     }).join(" ") + `</h2>`;
   }
 
   function box(source, content) {
    return `
     <div class="box">
-    <h1>${source.short}</h1>
+    <h1 id="${${source.short}}">${source.short}</h1>
       <div class="content">${content}</div>
     </div>`;
   }
