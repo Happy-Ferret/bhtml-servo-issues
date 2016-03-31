@@ -4,6 +4,15 @@
 
 <title>bhtml + servo fixed bugs</title>
 
+<script>
+  /* In Safari, window.fetch exists, but it's not implemented.
+     The polyfill fails */
+  window.fetch("/").catch(function(error) {
+    if (error == "Fetch is not yet implemented") {
+      window.fetch = undefined;
+    }
+  });
+</script>
 <script src="fetch.js"></script>
 <script src="https://raw.githubusercontent.com/taylorhakes/promise-polyfill/master/Promise.min.js"></script>
 <script src="pretty-date.js"></script>
